@@ -367,16 +367,22 @@
 
     function getImageData(img, callback) {
         function handleBinaryFile(binFile) {
+            const result = {};
+            const t1 = Date.now();
             var data = findEXIFinJPEG(binFile);
-            img.exifdata = data || {};
+            const t2 = Date.now();
+            result.exifdata = data || {};
             var iptcdata = findIPTCinJPEG(binFile);
-            img.iptcdata = iptcdata || {};
+            const t3 = Date.now();
+            result.iptcdata = iptcdata || {};
             if (EXIF.isXmpEnabled) {
                var xmpdata= findXMPinJPEG(binFile);
-               img.xmpdata = xmpdata || {};               
+               result.xmpdata = xmpdata || {};               
             }
+            const t4 = Date.now();
+                console.log(`EXIF finished parsing, exifTime: ${t2 - t1}, iptcTime: ${t3 - t2}, xmpTime: ${t4-t3}`);
             if (callback) {
-                callback.call(img);
+                callback(result);
             }
         }
 
@@ -409,8 +415,10 @@
             }
         } else if (self.FileReader && (img instanceof self.Blob || img instanceof self.File)) {
             var fileReader = new FileReader();
+            const t1 = Date.now();
             fileReader.onload = function(e) {
                 if (debug) console.log("Got file of length " + e.target.result.byteLength);
+                console.log(`EXIF finished reading file to arrayBuffer, duration: ${Date.now() - t1}`)
                 handleBinaryFile(e.target.result);
             };
 
@@ -983,7 +991,7 @@
             getImageData(img, callback);
         } else {
             if (callback) {
-                callback.call(img);
+                callback(img);
             }
         }
         return true;
