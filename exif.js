@@ -853,6 +853,7 @@
             // console.warn('XML parsing not supported without DOMParser');
             return;
         }
+        const fileAsString = String.fromCharCode.apply(null, new Uint8Array(file));
         var dataView = new DataView(file);
 
         if (debug) console.log("Got file of length " + file.byteLength);
@@ -865,13 +866,18 @@
             length = file.byteLength,
             dom = new DOMParser();
 
-        while (offset < (length-4)) {
-            if (getStringFromDB(dataView, offset, 4) == "http") {
-                var startOffset = offset - 1;
-                var sectionLength = dataView.getUint16(offset - 2) - 1;
-                var xmpString = getStringFromDB(dataView, startOffset, sectionLength)
-                var xmpEndIndex = xmpString.indexOf('xmpmeta>') + 8;
-                xmpString = xmpString.substring( xmpString.indexOf( '<x:xmpmeta' ), xmpEndIndex );
+//        while (offset < (length-4)) {
+ //           if (getStringFromDB(dataView, offset, 4) == "http") {
+//                var startOffset = offset - 1;
+//                var sectionLength = dataView.getUint16(offset - 2) - 1;
+//                var xmpString = getStringFromDB(dataView, startOffset, sectionLength)
+
+                const xmpStartIndex = fileAsString.indexOf( '<x:xmpmeta' );
+                if (xmpStartIndex < 0) {
+                    return null;
+                }
+                var xmpEndIndex = fileAsString.indexOf('xmpmeta>', xmpStartIndex) + 8;
+                let xmpString = fileAsString.substring( xmpStartIndex, xmpEndIndex );
 
                 var indexOfXmp = xmpString.indexOf('x:xmpmeta') + 10
                 //Many custom written programs embed xmp/xml without any namespace. Following are some of them.
@@ -892,10 +898,10 @@
 
                 var domDocument = dom.parseFromString( xmpString, 'text/xml' );
                 return xml2Object(domDocument);
-            } else{
-             offset++;
-            }
-        }
+ //           } else{
+ //            offset++;
+ //           }
+ //       }
     }
 
     function xml2json(xml) {
