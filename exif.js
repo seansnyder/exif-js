@@ -851,7 +851,7 @@
         const contentBuf = new Uint8Array(buf);
         const stringAsBuf = new ArrayBuffer(string.length);
         const stringUint8View = new Uint8Array(stringAsBuf);
-        for (var i=0, strLen=str.length; i < strLen; i++) {
+        for (let i=0; i < string.length; i++) {
             const code = str.charCodeAt(i);
             if (code > 255) {
                 throw new Error(`findAsciiStringInArrayBuffer: string contains non-ascii `
