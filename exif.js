@@ -847,13 +847,38 @@
         return tags;
     }
 
+    function findAsciiStringInArrayBuffer(buf, string, startIdx = 0) {
+        const contentBuf = new Uint8Array(buf);
+        const stringAsBuf = new ArrayBuffer(string.length);
+        const stringUint8View = new Uint8Array(stringAsBuf);
+        for (var i=0, strLen=str.length; i < strLen; i++) {
+            const code = str.charCodeAt(i);
+            if (code > 255) {
+                throw new Error(`findAsciiStringInArrayBuffer: string contains non-ascii `
+                + `character: ${code}, index: ${i}, string: ${string}`);
+            }
+            stringUint8View[i] = code;
+        }
+        let contentIdx;
+        for (let outerIndex = startIdx; outerIndex <= (buf.byteLength - string.length); outerIndex++) {
+            for (let innerIndex = 0; innerIndex < string.length; innerIndex++) {
+                contentIdx = outerIndex + innerIndex;
+                if (contentBuf[contentIdx] !== stringUint8View[innerIndex]) {
+                    break;
+                } else if (innerIndex === (string.length - 1)) {
+                    return outerIndex;
+                }
+            }
+        }
+        return -1;
+    }
+
    function findXMPinJPEG(file) {
 
         if (!('DOMParser' in self)) {
             // console.warn('XML parsing not supported without DOMParser');
             return;
         }
-        const fileAsString = String.fromCharCode.apply(null, new Uint8Array(file));
         var dataView = new DataView(file);
 
         if (debug) console.log("Got file of length " + file.byteLength);
@@ -872,12 +897,12 @@
 //                var sectionLength = dataView.getUint16(offset - 2) - 1;
 //                var xmpString = getStringFromDB(dataView, startOffset, sectionLength)
 
-                const xmpStartIndex = fileAsString.indexOf( '<x:xmpmeta' );
+                const xmpStartIndex = findAsciiStringInArrayBuffer(file, '<x:xmpmeta');
                 if (xmpStartIndex < 0) {
                     return null;
                 }
-                var xmpEndIndex = fileAsString.indexOf('xmpmeta>', xmpStartIndex) + 8;
-                let xmpString = fileAsString.substring( xmpStartIndex, xmpEndIndex );
+                var xmpEndIndex = findAsciiStringInArrayBuffer(file, 'xmpmeta>', xmpStartIndex) + 8;
+                let xmpString = getStringFromDB(dataView, xmpStartIndex, xmpEndIndex - xmpStartIndex + 8);
 
                 var indexOfXmp = xmpString.indexOf('x:xmpmeta') + 10
                 //Many custom written programs embed xmp/xml without any namespace. Following are some of them.
