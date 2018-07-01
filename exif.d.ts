@@ -1,7 +1,7 @@
 interface IResult {
     exifdata: any;
     iptcdata: any;
-    exifdata?: any;
+    xmpdata?: any;
 }
 
 interface EXIFStatic {

@@ -987,13 +987,7 @@
             && !img.complete)
             return false;
 
-        if (!imageHasData(img)) {
-            getImageData(img, callback);
-        } else {
-            if (callback) {
-                callback(img);
-            }
-        }
+        getImageData(img, callback);
         return true;
     }
 
